@@ -39,26 +39,23 @@ public class OrderService {
         this.restaurantServiceClient = restaurantServiceClient;
     }
 
-
     @Transactional
     public OrderResponse createOrder(Long customerId, CreateOrderRequest request) {
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new IllegalStateException("Cannot create an order with no items");
         }
 
-
         if (!restaurantServiceClient.restaurantExists(request.getRestaurantId())) {
             log.warn("Restaurant {} not found or Restaurant Service is unavailable. Proceeding with order creation.",
                     request.getRestaurantId());
         }
 
-
         Order order = new Order();
         order.setCustomerId(customerId);
         order.setRestaurantId(request.getRestaurantId());
+        order.setRestaurantName(request.getRestaurantName());
         order.setStatus(OrderStatus.CREATED);
         order.setCurrency(request.getCurrency() != null ? request.getCurrency() : "USD");
-
 
         BigDecimal totalPrice = BigDecimal.ZERO;
         for (CreateOrderRequest.OrderItemRequest itemRequest : request.getItems()) {
@@ -91,10 +88,8 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
-
         statusHistoryRepository.save(
                 new OrderStatusHistory(savedOrder.getId(), null, OrderStatus.CREATED, customerId.toString()));
-
 
         eventPublisher.publishOrderCreated(savedOrder);
 
@@ -103,7 +98,6 @@ public class OrderService {
 
         return toResponse(savedOrder);
     }
-
 
     @Transactional(readOnly = true)
     public List<OrderResponse> getOrders(JwtUserDetails user) {
@@ -124,12 +118,10 @@ public class OrderService {
         return orders.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(UUID orderId, JwtUserDetails user) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
-
 
         if (!user.isAdmin()) {
             if (user.isCustomer() && !order.getCustomerId().equals(user.getUserId())) {
@@ -146,7 +138,6 @@ public class OrderService {
         return toResponse(order);
     }
 
-
     @Transactional
     public OrderResponse updateStatus(UUID orderId, OrderStatus newStatus, String changedBy) {
         Order order = orderRepository.findById(orderId)
@@ -162,9 +153,7 @@ public class OrderService {
         order.setStatus(newStatus);
         orderRepository.save(order);
 
-
         statusHistoryRepository.save(new OrderStatusHistory(orderId, oldStatus, newStatus, changedBy));
-
 
         eventPublisher.publishOrderStatusChanged(order, oldStatus, newStatus);
 
@@ -172,7 +161,6 @@ public class OrderService {
 
         return toResponse(order);
     }
-
 
     @Transactional
     public OrderResponse assignCourier(UUID orderId, Long courierId) {
@@ -187,13 +175,12 @@ public class OrderService {
         return toResponse(order);
     }
 
-
-
     private OrderResponse toResponse(Order order) {
         OrderResponse response = new OrderResponse();
         response.setId(order.getId());
         response.setCustomerId(order.getCustomerId());
         response.setRestaurantId(order.getRestaurantId());
+        response.setRestaurantName(order.getRestaurantName());
         response.setCourierId(order.getCourierId());
         response.setStatus(order.getStatus());
         response.setTotalPrice(order.getTotalPrice());
@@ -201,8 +188,8 @@ public class OrderService {
         response.setCreatedAt(order.getCreatedAt());
         response.setUpdatedAt(order.getUpdatedAt());
 
-        response.setItems(order.getItems().stream().map(i->{
-            OrderResponse.OrderItemResponse ir= new OrderResponse.OrderItemResponse();
+        response.setItems(order.getItems().stream().map(i -> {
+            OrderResponse.OrderItemResponse ir = new OrderResponse.OrderItemResponse();
             ir.setId(i.getId());
             ir.setName(i.getName());
             ir.setMenuItemId(i.getMenuItemId());
