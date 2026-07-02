@@ -35,3 +35,9 @@ build/
 ### OS ###
 .DS_Store
 Thumbs.db
+
+### Build artifacts & local tools ###
+out/
+.build-tools/
+foodexpress-order/
+tmp_*.json
