@@ -17,6 +17,10 @@ public class CreateOrderRequest {
     @Schema(description = "ID of the restaurant")
     private UUID restaurantId;
 
+    @NotNull(message = "Restaurant name is required")
+    @Schema(description = "Name of the restaurant", example = "Pizza Palace")
+    private String restaurantName;
+
     @Schema(description = "Currency code (defaults to USD)", example = "USD")
     private String currency = "USD";
 
@@ -27,6 +31,14 @@ public class CreateOrderRequest {
 
     public UUID getRestaurantId() {
         return restaurantId;
+    }
+
+    public void setRestaurantName(String restaurantName) {
+        this.restaurantName = restaurantName;
+    }
+
+    public String getRestaurantName() {
+        return restaurantName;
     }
 
     public void setRestaurantId(UUID restaurantId) {

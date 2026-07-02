@@ -74,6 +74,7 @@ public class EventPublisherService {
         data.put("customerId", order.getCustomerId());
         data.put("customerEmail", getCurrentUserEmail(order.getCustomerId()));
         data.put("restaurantId", order.getRestaurantId());
+        data.put("restaurantName", order.getRestaurantName());
         data.put("totalPrice", order.getTotalPrice());
         data.put("currency", order.getCurrency() != null ? order.getCurrency() : "UZS");
         data.put("status", order.getStatus().name());
@@ -120,6 +121,7 @@ public class EventPublisherService {
         rabbitData.put("orderId", order.getId().toString());
         rabbitData.put("customerId", order.getCustomerId());
         rabbitData.put("restaurantId", order.getRestaurantId());
+        rabbitData.put("restaurantName", order.getRestaurantName());
         rabbitData.put("oldStatus", oldStatus.name());
         rabbitData.put("newStatus", newStatus.name());
         if (order.getCourierId() != null) {
@@ -147,6 +149,8 @@ public class EventPublisherService {
         data.put("orderId", order.getId().toString());
         data.put("customerId", order.getCustomerId());
         data.put("customerEmail", getCurrentUserEmail(order.getCustomerId()));
+        data.put("restaurantId", order.getRestaurantId());
+        data.put("restaurantName", order.getRestaurantName());
         data.put("courierId", order.getCourierId());
         data.put("oldStatus", oldStatus.name());
         data.put("newStatus", newStatus.name());
@@ -195,6 +199,7 @@ public class EventPublisherService {
         data.put("orderId", order.getId().toString());
         data.put("customerId", order.getCustomerId());
         data.put("restaurantId", order.getRestaurantId());
+        data.put("restaurantName", order.getRestaurantName());
         data.put("status", order.getStatus().name());
         data.put("totalPrice", order.getTotalPrice());
         data.put("currency", order.getCurrency());

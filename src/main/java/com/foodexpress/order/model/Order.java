@@ -21,6 +21,9 @@ public class Order {
     @Column(name = "restaurant_id", nullable = false)
     private UUID restaurantId;
 
+    @Column(name = "restaurant_name", nullable = false)
+    private String restaurantName;
+
     @Column(name = "courier_id")
     private Long courierId;
 
@@ -79,6 +82,14 @@ public class Order {
 
     public void setRestaurantId(UUID restaurantId) {
         this.restaurantId = restaurantId;
+    }
+
+    public String getRestaurantName() {
+        return restaurantName;
+    }
+
+    public void setRestaurantName(String restaurantName) {
+        this.restaurantName = restaurantName;
     }
 
     public Long getCourierId() {
