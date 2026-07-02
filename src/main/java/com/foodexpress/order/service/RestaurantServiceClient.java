@@ -12,10 +12,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * REST client for the Restaurant Service.
- * Validates menu items and verifies prices before order creation.
- */
+
 @Service
 public class RestaurantServiceClient {
 
@@ -30,11 +27,7 @@ public class RestaurantServiceClient {
         this.baseUrl = baseUrl;
     }
 
-    /**
-     * Validate that a menu item exists at the given restaurant and return its
-     * current price.
-     * Returns the price from the Restaurant Service, or null if validation fails.
-     */
+
     public BigDecimal validateMenuItem(UUID restaurantId, Long menuItemId) {
         try {
             String url = baseUrl + "/api/menu-items/" + menuItemId;
@@ -52,8 +45,7 @@ public class RestaurantServiceClient {
         } catch (RestClientException e) {
             log.warn("Failed to validate menu item {} at restaurant {}: {}",
                     menuItemId, restaurantId, e.getMessage());
-            // If the restaurant service is unavailable, we still allow the order
-            // but log the warning. In production, this should fail.
+
             return null;
         }
     }
@@ -71,9 +63,7 @@ public class RestaurantServiceClient {
         }
     }
 
-    /**
-     * Check if a restaurant exists.
-     */
+
     public boolean restaurantExists(UUID restaurantId) {
         try {
             String url = baseUrl + "/restaurants/" + restaurantId;

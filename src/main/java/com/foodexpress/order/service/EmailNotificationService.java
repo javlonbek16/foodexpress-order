@@ -12,9 +12,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.mail.internet.MimeMessage;
 
-/**
- * Sends Gmail email notifications to customers for order events.
- */
+
 @Service
 public class EmailNotificationService {
 
@@ -32,9 +30,7 @@ public class EmailNotificationService {
         this.mailSender = mailSender;
     }
 
-    /**
-     * Send a notification email when an order is successfully created.
-     */
+
     public void sendOrderCreatedEmail(String toEmail, Order order) {
         if (!enabled || toEmail == null || toEmail.isBlank()) return;
 
@@ -90,9 +86,7 @@ public class EmailNotificationService {
         sendHtmlEmail(toEmail, subject, body);
     }
 
-    /**
-     * Send a notification email when order status changes.
-     */
+
     public void sendOrderStatusChangedEmail(String toEmail, Order order, OrderStatus oldStatus, OrderStatus newStatus) {
         if (!enabled || toEmail == null || toEmail.isBlank()) return;
 
@@ -151,7 +145,7 @@ public class EmailNotificationService {
         sendHtmlEmail(toEmail, subject, body);
     }
 
-    // ── Internal helpers ──
+
 
     private void sendHtmlEmail(String to, String subject, String htmlBody) {
         try {

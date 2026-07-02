@@ -14,7 +14,7 @@ public enum OrderStatus {
 
     public boolean canTransitionTo(OrderStatus next) {
         if (next == CANCELLED) {
-            // Cancellation allowed from CREATED, CONFIRMED, PREPARING, READY
+
             return this == CREATED || this == CONFIRMED || this == PREPARING || this == READY;
         }
 
@@ -28,9 +28,7 @@ public enum OrderStatus {
         };
     }
 
-    /**
-     * Returns the list of statuses this status can transition to.
-     */
+
     public List<OrderStatus> allowedTransitions() {
         List<OrderStatus> transitions = new java.util.ArrayList<>();
 

@@ -20,9 +20,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * Publishes order-related events to RabbitMQ and sends notifications to external Event Gateway.
- */
+
 @Service
 public class EventPublisherService {
 
@@ -48,11 +46,9 @@ public class EventPublisherService {
         this.emailNotificationService = emailNotificationService;
     }
 
-    /**
-     * Publish an order.created event.
-     */
+
     public void publishOrderCreated(Order order) {
-        // 1. Build RabbitMQ Payload (keep original schema)
+
         Map<String, Object> rabbitEvent = new HashMap<>();
         rabbitEvent.put("event", ORDER_CREATED_KEY);
         rabbitEvent.put("timestamp", Instant.now().toString());
@@ -66,7 +62,7 @@ public class EventPublisherService {
                     ORDER_CREATED_KEY, order.getId(), e.getMessage());
         }
 
-        // 2. Build HTTP Payload for Event Gateway (strict OpenAPI schema)
+
         Map<String, Object> httpEvent = new HashMap<>();
         httpEvent.put("eventId", UUID.randomUUID().toString());
         httpEvent.put("eventType", "order.created");
@@ -94,7 +90,7 @@ public class EventPublisherService {
 
         httpEvent.put("data", data);
 
-        // Send to external notification service via HTTP with X-API-Key
+
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -108,16 +104,14 @@ public class EventPublisherService {
                     order.getId(), e.getMessage());
         }
 
-        // 3. Send Gmail notification to customer
+
         String customerEmail = getCurrentUserEmail(order.getCustomerId());
         emailNotificationService.sendOrderCreatedEmail(customerEmail, order);
     }
 
-    /**
-     * Publish an order.status_changed event.
-     */
+
     public void publishOrderStatusChanged(Order order, OrderStatus oldStatus, OrderStatus newStatus) {
-        // 1. Build RabbitMQ Payload (keep original schema)
+
         Map<String, Object> rabbitEvent = new HashMap<>();
         rabbitEvent.put("event", ORDER_STATUS_CHANGED_KEY);
         rabbitEvent.put("timestamp", Instant.now().toString());
@@ -142,7 +136,7 @@ public class EventPublisherService {
                     ORDER_STATUS_CHANGED_KEY, order.getId(), e.getMessage());
         }
 
-        // 2. Build HTTP Payload for Event Gateway (strict OpenAPI schema)
+
         Map<String, Object> httpEvent = new HashMap<>();
         httpEvent.put("eventId", UUID.randomUUID().toString());
         httpEvent.put("eventType", "order.status_changed");
@@ -160,7 +154,7 @@ public class EventPublisherService {
 
         httpEvent.put("data", data);
 
-        // Send to external notification service via HTTP with X-API-Key
+
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -174,7 +168,7 @@ public class EventPublisherService {
                     order.getId(), e.getMessage());
         }
 
-        // 3. Send Gmail notification to customer
+
         String customerEmail = getCurrentUserEmail(order.getCustomerId());
         emailNotificationService.sendOrderStatusChangedEmail(customerEmail, order, oldStatus, newStatus);
     }
@@ -192,7 +186,7 @@ public class EventPublisherService {
         } catch (Exception e) {
             log.warn("Could not retrieve email from security context: {}", e.getMessage());
         }
-        // Fallback email format matches what openapi regex validates
+
         return "customer@foodexpress.com";
     }
 

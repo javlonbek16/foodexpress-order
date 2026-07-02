@@ -33,7 +33,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints (Swagger, H2 console, actuator, auth testing)
+
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -42,9 +42,10 @@ public class SecurityConfig {
                                 "/actuator/**",
                                 "/auth/**")
                         .permitAll()
-                        // All other endpoints require authentication
+
                         .anyRequest().authenticated())
-                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // H2 console
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -39,29 +39,27 @@ public class OrderService {
         this.restaurantServiceClient = restaurantServiceClient;
     }
 
-    /**
-     * Create a new order from the items provided by the frontend.
-     */
+
     @Transactional
     public OrderResponse createOrder(Long customerId, CreateOrderRequest request) {
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new IllegalStateException("Cannot create an order with no items");
         }
 
-        // Validate restaurant exists
+
         if (!restaurantServiceClient.restaurantExists(request.getRestaurantId())) {
             log.warn("Restaurant {} not found or Restaurant Service is unavailable. Proceeding with order creation.",
                     request.getRestaurantId());
         }
 
-        // Build the order
+
         Order order = new Order();
         order.setCustomerId(customerId);
         order.setRestaurantId(request.getRestaurantId());
         order.setStatus(OrderStatus.CREATED);
         order.setCurrency(request.getCurrency() != null ? request.getCurrency() : "USD");
 
-        // Convert request items to order items and validate menu items & prices
+
         BigDecimal totalPrice = BigDecimal.ZERO;
         for (CreateOrderRequest.OrderItemRequest itemRequest : request.getItems()) {
             BigDecimal currentPrice = restaurantServiceClient.validateMenuItem(request.getRestaurantId(),
@@ -69,7 +67,7 @@ public class OrderService {
 
             BigDecimal finalPrice = itemRequest.getPrice();
             if (currentPrice != null) {
-                // If price has changed, use the server-side price
+
                 if (currentPrice.compareTo(itemRequest.getPrice()) != 0) {
                     log.info("Price updated for item {} from {} to {}", itemRequest.getMenuItemId(),
                             itemRequest.getPrice(), currentPrice);
@@ -93,11 +91,11 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
-        // Record initial status in history
+
         statusHistoryRepository.save(
                 new OrderStatusHistory(savedOrder.getId(), null, OrderStatus.CREATED, customerId.toString()));
 
-        // Publish event
+
         eventPublisher.publishOrderCreated(savedOrder);
 
         log.info("Order {} created by customer {} for restaurant {}",
@@ -106,9 +104,7 @@ public class OrderService {
         return toResponse(savedOrder);
     }
 
-    /**
-     * Get all orders filtered by the user's role.
-     */
+
     @Transactional(readOnly = true)
     public List<OrderResponse> getOrders(JwtUserDetails user) {
         List<Order> orders;
@@ -128,15 +124,13 @@ public class OrderService {
         return orders.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    /**
-     * Get a single order by ID, enforcing ownership rules.
-     */
+
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(UUID orderId, JwtUserDetails user) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
-        // Enforce ownership
+
         if (!user.isAdmin()) {
             if (user.isCustomer() && !order.getCustomerId().equals(user.getUserId())) {
                 throw new ResourceNotFoundException("Order not found: " + orderId);
@@ -152,9 +146,7 @@ public class OrderService {
         return toResponse(order);
     }
 
-    /**
-     * Update the status of an order, enforcing the state machine.
-     */
+
     @Transactional
     public OrderResponse updateStatus(UUID orderId, OrderStatus newStatus, String changedBy) {
         Order order = orderRepository.findById(orderId)
@@ -170,10 +162,10 @@ public class OrderService {
         order.setStatus(newStatus);
         orderRepository.save(order);
 
-        // Record in history
+
         statusHistoryRepository.save(new OrderStatusHistory(orderId, oldStatus, newStatus, changedBy));
 
-        // Publish event
+
         eventPublisher.publishOrderStatusChanged(order, oldStatus, newStatus);
 
         log.info("Order {} status changed: {} → {}", orderId, oldStatus, newStatus);
@@ -181,9 +173,7 @@ public class OrderService {
         return toResponse(order);
     }
 
-    /**
-     * Assign a courier to an order.
-     */
+
     @Transactional
     public OrderResponse assignCourier(UUID orderId, Long courierId) {
         Order order = orderRepository.findById(orderId)
@@ -197,7 +187,7 @@ public class OrderService {
         return toResponse(order);
     }
 
-    // ── Mapping ──
+
 
     private OrderResponse toResponse(Order order) {
         OrderResponse response = new OrderResponse();

@@ -10,7 +10,7 @@ public class RestTemplateConfig {
 
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
-        // Configure timeouts or other settings if needed
+
         return builder
                 .setConnectTimeout(java.time.Duration.ofSeconds(5))
                 .setReadTimeout(java.time.Duration.ofSeconds(5))

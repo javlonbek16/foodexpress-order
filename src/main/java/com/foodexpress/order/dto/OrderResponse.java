@@ -16,7 +16,7 @@ public class OrderResponse {
     private UUID restaurantId;
     private String restaurantName;
 
-    // request lifecycle
+
     private Long courierId;
     private OrderStatus status;
     private BigDecimal totalPrice;

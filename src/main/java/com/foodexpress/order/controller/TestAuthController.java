@@ -6,9 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
-/**
- * test controller to test JWT tokens are now issued by the NestJS Auth service.
- */
+
 @RestController
 @RequestMapping("/auth")
 public class TestAuthController {

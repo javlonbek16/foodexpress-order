@@ -5,10 +5,7 @@ import io.jsonwebtoken.Claims;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Holds parsed JWT claims for the authenticated user.
- * Used as the principal in the SecurityContext.
- */
+
 public class JwtUserDetails {
 
     private final Long userId;

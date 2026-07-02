@@ -18,10 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/**
- * Utility class for parsing and validating JWTs locally.
- * Extracts user ID, role, and permissions from the token claims.
- */
+
 @Component
 public class JwtUtil {
 
@@ -32,16 +29,12 @@ public class JwtUtil {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public JwtUtil(@Value("${jwt.secret}") String secret) {
-        // Use raw key bytes — same as Python's jwt.decode() with the raw secret string.
-        // Do NOT pad or transform the key, it must match Auth service byte-for-byte.
+
         this.keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         this.signingKey = new SecretKeySpec(keyBytes, "HmacSHA256");
     }
 
-    /**
-     * Parse and validate the JWT, returning the claims.
-     * Performs manual signature verification to support keys under 256 bits (JJWT 0.12+ strict check bypass).
-     */
+
     public Claims parseToken(String token) {
         try {
             String[] parts = token.split("\\.");
@@ -49,7 +42,7 @@ public class JwtUtil {
                 throw new MalformedJwtException("JWT must have 3 parts");
             }
 
-            // Verify signature manually using HMAC-SHA256
+
             String signingInput = parts[0] + "." + parts[1];
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(keyBytes, "HmacSHA256"));
@@ -62,12 +55,12 @@ public class JwtUtil {
                 throw new MalformedJwtException("JWT signature validation failed");
             }
 
-            // Parse payload
+
             byte[] payloadBytes = Base64.getUrlDecoder().decode(parts[1]);
             @SuppressWarnings("unchecked")
             Map<String, Object> claimsMap = objectMapper.readValue(payloadBytes, Map.class);
 
-            // Verify expiration
+
             if (claimsMap.containsKey("exp")) {
                 Number exp = (Number) claimsMap.get("exp");
                 if (System.currentTimeMillis() / 1000 > exp.longValue()) {
@@ -75,13 +68,13 @@ public class JwtUtil {
                 }
             }
 
-            // Verify issuer (to match issuer='foodexpress-auth' in Python/Django)
+
             String issuer = (String) claimsMap.get("iss");
             if (!"foodexpress-auth".equals(issuer)) {
                 throw new MalformedJwtException("Invalid JWT issuer");
             }
 
-            // Build Claims object using JJWT builder
+
             return Jwts.claims().add(claimsMap).build();
 
         } catch (JwtException e) {
@@ -91,9 +84,7 @@ public class JwtUtil {
         }
     }
 
-    /**
-     * Validate the token without returning claims.
-     */
+
     public boolean isTokenValid(String token) {
         try {
             parseToken(token);
@@ -104,14 +95,11 @@ public class JwtUtil {
         }
     }
 
-    /**
-     * Extract the user ID from the 'user_id' claim.
-     * NestJS auth service puts user ID in 'user_id', not 'sub'.
-     */
+
     public Long getUserId(Claims claims) {
         Object userIdObj = claims.get("user_id");
         if (userIdObj == null) {
-            // fallback to subject if present
+
             userIdObj = claims.getSubject();
         }
         if (userIdObj == null) {
@@ -126,16 +114,12 @@ public class JwtUtil {
         }
     }
 
-    /**
-     * Extract the role from the token (e.g., CUSTOMER, RESTAURANT, COURIER, ADMIN).
-     */
+
     public String getRole(Claims claims) {
         return claims.get("role", String.class);
     }
 
-    /**
-     * Extract the restaurant_id claim (for RESTAURANT role users).
-     */
+
     public UUID getRestaurantId(Claims claims) {
         Object rid = claims.get("restaurant_id");
         if (rid != null) {
@@ -148,10 +132,7 @@ public class JwtUtil {
         return null;
     }
 
-    /**
-     * Extract the permissions list from the token.
-     * NestJS auth sends permissions as [{id, code}] objects — we extract the 'code' field.
-     */
+
     @SuppressWarnings("unchecked")
     public List<String> getPermissions(Claims claims) {
         Object perms = claims.get("permissions");

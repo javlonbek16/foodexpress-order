@@ -18,10 +18,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Filter that intercepts every request, extracts the JWT from the Authorization header,
- * validates it locally, and populates the SecurityContext with user details and permissions.
- */
+
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -51,17 +48,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 List<String> permissions = jwtUtil.getPermissions(claims);
                 String role = jwtUtil.getRole(claims);
 
-                // Build authorities from permissions + role
+
                 List<GrantedAuthority> authorities = permissions.stream()
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-                // Add role as ROLE_ authority
+
                 if (role != null) {
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
                 }
 
-                // Principal is a JwtUserDetails holding all parsed claims
+
                 JwtUserDetails principal = new JwtUserDetails(claims, jwtUtil);
 
                 UsernamePasswordAuthenticationToken auth =
