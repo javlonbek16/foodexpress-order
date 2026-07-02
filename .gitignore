@@ -41,3 +41,6 @@ out/
 .build-tools/
 foodexpress-order/
 tmp_*.json
+
+### Sensitive config ###
+src/main/resources/application.yml
