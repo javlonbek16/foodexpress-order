@@ -56,6 +56,8 @@ public class OrderServiceTest {
         CreateOrderRequest request = new CreateOrderRequest();
         request.setRestaurantId(restaurantId);
         request.setCurrency("USD");
+        request.setDeliveryAddress("123 Test St");
+        request.setCustomerFullName("John Doe");
 
         CreateOrderRequest.OrderItemRequest item = new CreateOrderRequest.OrderItemRequest();
         item.setMenuItemId(menuItemId);
@@ -88,6 +90,7 @@ public class OrderServiceTest {
         savedOrder.addItem(orderItem);
 
         when(restaurantServiceClient.restaurantExists(restaurantId)).thenReturn(true);
+        when(restaurantServiceClient.getRestaurantAddress(restaurantId)).thenReturn("Restaurant Address 123");
         when(restaurantServiceClient.validateMenuItem(restaurantId, menuItemId)).thenReturn(new BigDecimal("10.00"));
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
@@ -109,11 +112,12 @@ public class OrderServiceTest {
         savedOrder.setRestaurantId(restaurantId);
         savedOrder.setStatus(OrderStatus.CREATED);
         savedOrder.setCurrency("USD");
-        savedOrder.setTotalPrice(new BigDecimal("24.00")); // Updated price: 2 * 12.00
+        savedOrder.setTotalPrice(new BigDecimal("24.00")); 
         savedOrder.setCreatedAt(Instant.now());
 
         when(restaurantServiceClient.restaurantExists(restaurantId)).thenReturn(true);
-        // Price updated from 10.00 to 12.00
+        when(restaurantServiceClient.getRestaurantAddress(restaurantId)).thenReturn("Restaurant Address 123");
+        
         when(restaurantServiceClient.validateMenuItem(restaurantId, menuItemId)).thenReturn(new BigDecimal("12.00"));
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
@@ -179,15 +183,50 @@ public class OrderServiceTest {
         UUID orderId = UUID.randomUUID();
         Order order = new Order();
         order.setId(orderId);
-        order.setCustomerId(999L); // Different customer
+        order.setCustomerId(999L); 
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
         JwtUserDetails user = mock(JwtUserDetails.class);
         when(user.isAdmin()).thenReturn(false);
         when(user.isCustomer()).thenReturn(true);
-        when(user.getUserId()).thenReturn(customerId); // Current customer
+        when(user.getUserId()).thenReturn(customerId); 
 
         assertThrows(ResourceNotFoundException.class, () -> orderService.getOrderById(orderId, user));
+    }
+
+    @Test
+    void createOrder_restaurantNotFound_throwsException() {
+        CreateOrderRequest request = buildRequest(new BigDecimal("10.00"));
+
+        when(restaurantServiceClient.restaurantExists(restaurantId)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class, () -> orderService.createOrder(customerId, request));
+    }
+
+    @Test
+    void createOrder_restaurantServiceUnavailable_throwsException() {
+        CreateOrderRequest request = buildRequest(new BigDecimal("10.00"));
+
+        when(restaurantServiceClient.restaurantExists(restaurantId)).thenThrow(
+            new com.foodexpress.order.exception.ServiceUnavailableException("Restaurant Service is unavailable")
+        );
+
+        assertThrows(com.foodexpress.order.exception.ServiceUnavailableException.class, () -> 
+            orderService.createOrder(customerId, request)
+        );
+    }
+
+    @Test
+    void createOrder_menuItemNotFound_throwsException() {
+        CreateOrderRequest request = buildRequest(new BigDecimal("10.00"));
+
+        when(restaurantServiceClient.restaurantExists(restaurantId)).thenReturn(true);
+        when(restaurantServiceClient.getRestaurantAddress(restaurantId)).thenReturn("Restaurant Address 123");
+        when(restaurantServiceClient.validateMenuItem(restaurantId, menuItemId)).thenThrow(
+            new ResourceNotFoundException("Menu item 3 not found")
+        );
+
+        assertThrows(ResourceNotFoundException.class, () -> orderService.createOrder(customerId, request));
     }
 }

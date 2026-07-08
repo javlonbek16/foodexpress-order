@@ -27,6 +27,12 @@ public class Order {
     @Column(name = "courier_id")
     private Long courierId;
 
+    @Column(name = "courier_name")
+    private String courierName;
+
+    @Column(name = "courier_phone")
+    private String courierPhone;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status;
@@ -42,6 +48,24 @@ public class Order {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Column(name = "delivery_started_at")
+    private Instant deliveryStartedAt;
+
+    @Column(name = "delivery_completed_at")
+    private Instant deliveryCompletedAt;
+
+    @Column(name = "customer_email")
+    private String customerEmail;
+
+    @Column(name = "delivery_address")
+    private String deliveryAddress;
+
+    @Column(name = "restaurant_address")
+    private String restaurantAddress;
+
+    @Column(name = "customer_full_name")
+    private String customerFullName;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
@@ -100,6 +124,22 @@ public class Order {
         this.courierId = courierId;
     }
 
+    public String getCourierName() {
+        return courierName;
+    }
+
+    public void setCourierName(String courierName) {
+        this.courierName = courierName;
+    }
+
+    public String getCourierPhone() {
+        return courierPhone;
+    }
+
+    public void setCourierPhone(String courierPhone) {
+        this.courierPhone = courierPhone;
+    }
+
     public OrderStatus getStatus() {
         return status;
     }
@@ -148,8 +188,56 @@ public class Order {
         this.items = items;
     }
 
+    public Instant getDeliveryStartedAt() {
+        return deliveryStartedAt;
+    }
+
+    public void setDeliveryStartedAt(Instant deliveryStartedAt) {
+        this.deliveryStartedAt = deliveryStartedAt;
+    }
+
+    public Instant getDeliveryCompletedAt() {
+        return deliveryCompletedAt;
+    }
+
+    public void setDeliveryCompletedAt(Instant deliveryCompletedAt) {
+        this.deliveryCompletedAt = deliveryCompletedAt;
+    }
+
     public void addItem(OrderItem item) {
         items.add(item);
         item.setOrder(this);
+    }
+
+    public String getCustomerEmail() {
+        return customerEmail;
+    }
+
+    public void setCustomerEmail(String customerEmail) {
+        this.customerEmail = customerEmail;
+    }
+
+    public String getDeliveryAddress() {
+        return deliveryAddress;
+    }
+
+    public void setDeliveryAddress(String deliveryAddress) {
+        this.deliveryAddress = deliveryAddress;
+    }
+
+    public String getRestaurantAddress() {
+        return restaurantAddress;
+    }
+
+    public void setRestaurantAddress(String restaurantAddress) {
+        this.restaurantAddress = restaurantAddress;
+    }
+
+    public String getCustomerFullName() {
+        return customerFullName;
+    }
+
+    public void setCustomerFullName(String customerFullName) {
+        this.customerFullName = customerFullName;
     }
 }

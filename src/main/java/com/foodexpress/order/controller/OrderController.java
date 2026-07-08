@@ -1,6 +1,6 @@
 package com.foodexpress.order.controller;
 
-import com.foodexpress.order.dto.AssignCourierRequest;
+
 import com.foodexpress.order.dto.CreateOrderRequest;
 import com.foodexpress.order.dto.OrderResponse;
 import com.foodexpress.order.dto.UpdateStatusRequest;
@@ -38,7 +38,7 @@ public class OrderController {
             @AuthenticationPrincipal JwtUserDetails user,
             @Valid @RequestBody CreateOrderRequest request) {
 
-        OrderResponse response = orderService.createOrder(user.getUserId(), request);
+        OrderResponse response = orderService.createOrder(user.getUserId(), user.getEmail(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -50,6 +50,26 @@ public class OrderController {
 
         List<OrderResponse> orders = orderService.getOrders(user);
         return ResponseEntity.ok(orders);
+    }
+
+    @GetMapping("/customer/{userId}")
+    @PreAuthorize("hasAnyAuthority('order.read.own', 'order.read.all')")
+    @Operation(summary = "Get orders by customer ID", description = "Retrieves all orders for the specified customer, enforcing customer ownership rules")
+    public ResponseEntity<List<OrderResponse>> getOrdersByCustomerId(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal JwtUserDetails user) {
+        List<OrderResponse> response = orderService.getOrdersByCustomerId(userId, user);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/restaurant/{restaurantId}")
+    @PreAuthorize("hasAnyAuthority('order.read.own', 'order.read.all')")
+    @Operation(summary = "Get orders by restaurant ID", description = "Retrieves all orders for the specified restaurant, enforcing restaurant ownership rules")
+    public ResponseEntity<List<OrderResponse>> getOrdersByRestaurantId(
+            @PathVariable UUID restaurantId,
+            @AuthenticationPrincipal JwtUserDetails user) {
+        List<OrderResponse> response = orderService.getOrdersByRestaurantId(restaurantId, user);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
@@ -72,17 +92,6 @@ public class OrderController {
             @Valid @RequestBody UpdateStatusRequest request) {
 
         OrderResponse response = orderService.updateStatus(id, request.getStatus(), user.getUserId().toString());
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/{id}/assign-courier")
-    @PreAuthorize("hasAuthority('order.update.status')")
-    @Operation(summary = "Assign courier", description = "Assigns a courier to the specified order")
-    public ResponseEntity<OrderResponse> assignCourier(
-            @PathVariable UUID id,
-            @Valid @RequestBody AssignCourierRequest request) {
-
-        OrderResponse response = orderService.assignCourier(id, request.getCourierId());
         return ResponseEntity.ok(response);
     }
 }

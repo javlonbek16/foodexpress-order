@@ -24,6 +24,14 @@ public class CreateOrderRequest {
     @Schema(description = "Currency code (defaults to USD)", example = "USD")
     private String currency = "USD";
 
+    @NotNull(message = "deliveryAddress is required")
+    @Schema(description = "Delivery address for the order", example = "123 Main St, Springfield")
+    private String deliveryAddress;
+
+    @NotNull(message = "customerFullName is required")
+    @Schema(description = "Full name of the customer", example = "John Doe")
+    private String customerFullName;
+
     @NotEmpty(message = "items must not be empty")
     @Valid
     @Schema(description = "List of items to order")
@@ -53,6 +61,22 @@ public class CreateOrderRequest {
         this.currency = currency;
     }
 
+    public String getDeliveryAddress() {
+        return deliveryAddress;
+    }
+
+    public void setDeliveryAddress(String deliveryAddress) {
+        this.deliveryAddress = deliveryAddress;
+    }
+
+    public String getCustomerFullName() {
+        return customerFullName;
+    }
+
+    public void setCustomerFullName(String customerFullName) {
+        this.customerFullName = customerFullName;
+    }
+
     public List<OrderItemRequest> getItems() {
         return items;
     }
@@ -79,6 +103,9 @@ public class CreateOrderRequest {
         @NotNull(message = "price is required")
         @Schema(description = "Price per unit", example = "12.50")
         private BigDecimal price;
+
+        @Schema(description = "URL of the item image", example = "https://example.com/item.png")
+        private String imgUrl;
 
         public Long getMenuItemId() {
             return menuItemId;
@@ -110,6 +137,14 @@ public class CreateOrderRequest {
 
         public void setPrice(BigDecimal price) {
             this.price = price;
+        }
+
+        public String getImgUrl() {
+            return imgUrl;
+        }
+
+        public void setImgUrl(String imgUrl) {
+            this.imgUrl = imgUrl;
         }
     }
 }

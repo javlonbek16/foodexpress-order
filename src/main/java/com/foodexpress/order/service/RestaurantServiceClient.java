@@ -5,8 +5,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import com.foodexpress.order.exception.ResourceNotFoundException;
+import com.foodexpress.order.exception.ServiceUnavailableException;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -34,19 +37,45 @@ public class RestaurantServiceClient {
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
 
-            if (response != null && response.containsKey("price")) {
-                Object priceObj = response.get("price");
-                return new BigDecimal(priceObj.toString());
+            if (response != null) {
+                if (response.containsKey("categories")) {
+                    Object categoriesObj = response.get("categories");
+                    if (categoriesObj instanceof java.util.List) {
+                        java.util.List<?> categories = (java.util.List<?>) categoriesObj;
+                        boolean belongsToRestaurant = false;
+                        for (Object categoryObj : categories) {
+                            if (categoryObj instanceof Map) {
+                                Map<?, ?> categoryMap = (Map<?, ?>) categoryObj;
+                                Object restaurantUuidObj = categoryMap.get("restaurant");
+                                if (restaurantUuidObj != null && restaurantUuidObj.toString().equalsIgnoreCase(restaurantId.toString())) {
+                                    belongsToRestaurant = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!belongsToRestaurant) {
+                            throw new IllegalArgumentException("Menu item " + menuItemId + " does not belong to restaurant " + restaurantId);
+                        }
+                    }
+                }
+
+                if (response.containsKey("price") && response.get("price") != null) {
+                    Object priceObj = response.get("price");
+                    return new BigDecimal(priceObj.toString());
+                }
             }
 
-            log.warn("Menu item {} not found at restaurant {}", menuItemId, restaurantId);
-            return null;
+            throw new ResourceNotFoundException("Menu item " + menuItemId + " not found");
 
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new ResourceNotFoundException("Menu item " + menuItemId + " not found");
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == org.springframework.http.HttpStatus.NOT_FOUND) {
+                throw new ResourceNotFoundException("Menu item " + menuItemId + " not found");
+            }
+            throw new ServiceUnavailableException("Restaurant Service is unavailable: " + e.getMessage());
         } catch (RestClientException e) {
-            log.warn("Failed to validate menu item {} at restaurant {}: {}",
-                    menuItemId, restaurantId, e.getMessage());
-
-            return null;
+            throw new ServiceUnavailableException("Restaurant Service is unavailable: " + e.getMessage());
         }
     }
 
@@ -55,23 +84,60 @@ public class RestaurantServiceClient {
             String url = baseUrl + "/api/menu-items/" + menuItemId;
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            if (response == null) {
+                throw new ResourceNotFoundException("Menu item " + menuItemId + " not found");
+            }
             return response;
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new ResourceNotFoundException("Menu item " + menuItemId + " not found");
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == org.springframework.http.HttpStatus.NOT_FOUND) {
+                throw new ResourceNotFoundException("Menu item " + menuItemId + " not found");
+            }
+            throw new ServiceUnavailableException("Restaurant Service is unavailable: " + e.getMessage());
         } catch (RestClientException e) {
-            log.warn("Failed to get menu item data {} at restaurant {}: {}",
-                    menuItemId, restaurantId, e.getMessage());
-            return null;
+            throw new ServiceUnavailableException("Restaurant Service is unavailable: " + e.getMessage());
         }
     }
 
-
     public boolean restaurantExists(UUID restaurantId) {
         try {
-            String url = baseUrl + "/restaurants/" + restaurantId;
+            String url = baseUrl + "/api/restaurant/" + restaurantId;
             restTemplate.getForObject(url, Map.class);
             return true;
-        } catch (RestClientException e) {
-            log.warn("Restaurant {} not found or service unavailable: {}", restaurantId, e.getMessage());
+        } catch (HttpClientErrorException.NotFound e) {
             return false;
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == org.springframework.http.HttpStatus.NOT_FOUND) {
+                return false;
+            }
+            throw new ServiceUnavailableException("Restaurant Service is unavailable: " + e.getMessage());
+        } catch (RestClientException e) {
+            throw new ServiceUnavailableException("Restaurant Service is unavailable: " + e.getMessage());
+        }
+    }
+
+    public String getRestaurantAddress(UUID restaurantId) {
+        try {
+            String url = baseUrl + "/api/restaurant/" + restaurantId;
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            if (response != null && response.containsKey("address")) {
+                Object addressObj = response.get("address");
+                if (addressObj != null) {
+                    return addressObj.toString();
+                }
+            }
+            throw new IllegalStateException("Restaurant " + restaurantId + " response did not contain an address");
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new ResourceNotFoundException("Restaurant not found: " + restaurantId);
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == org.springframework.http.HttpStatus.NOT_FOUND) {
+                throw new ResourceNotFoundException("Restaurant not found: " + restaurantId);
+            }
+            throw new ServiceUnavailableException("Restaurant Service is unavailable: " + e.getMessage());
+        } catch (RestClientException e) {
+            throw new ServiceUnavailableException("Restaurant Service is unavailable: " + e.getMessage());
         }
     }
 }

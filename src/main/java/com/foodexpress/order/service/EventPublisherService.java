@@ -31,7 +31,6 @@ public class EventPublisherService {
 
     private final RabbitTemplate rabbitTemplate;
     private final RestTemplate restTemplate;
-    private final EmailNotificationService emailNotificationService;
 
     private static final String ORDER_CREATED_URL = "https://events.samariddin.uz/v1/events/order-created";
     private static final String ORDER_STATUS_CHANGED_URL = "https://events.samariddin.uz/v1/events/order-status-changed";
@@ -39,11 +38,9 @@ public class EventPublisherService {
     @Value("${gateway.api-key:6Ob_XlkyOKT0YRTJO8L6uXtFOyeC1Y0YtMRfVFNjgtc}")
     private String gatewayApiKey;
 
-    public EventPublisherService(RabbitTemplate rabbitTemplate, RestTemplate restTemplate,
-                                 EmailNotificationService emailNotificationService) {
+    public EventPublisherService(RabbitTemplate rabbitTemplate, RestTemplate restTemplate) {
         this.rabbitTemplate = rabbitTemplate;
         this.restTemplate = restTemplate;
-        this.emailNotificationService = emailNotificationService;
     }
 
 
@@ -67,14 +64,13 @@ public class EventPublisherService {
         httpEvent.put("eventId", UUID.randomUUID().toString());
         httpEvent.put("eventType", "order.created");
         httpEvent.put("occurredAt", Instant.now().toString());
-        httpEvent.put("version", 1);
+        httpEvent.put("version", 0);
 
         Map<String, Object> data = new HashMap<>();
         data.put("orderId", order.getId().toString());
         data.put("customerId", order.getCustomerId());
-        data.put("customerEmail", getCurrentUserEmail(order.getCustomerId()));
+        data.put("customerEmail", getTargetEmail(order));
         data.put("restaurantId", order.getRestaurantId());
-        data.put("restaurantName", order.getRestaurantName());
         data.put("totalPrice", order.getTotalPrice());
         data.put("currency", order.getCurrency() != null ? order.getCurrency() : "UZS");
         data.put("status", order.getStatus().name());
@@ -106,8 +102,7 @@ public class EventPublisherService {
         }
 
 
-        String customerEmail = getCurrentUserEmail(order.getCustomerId());
-        emailNotificationService.sendOrderCreatedEmail(customerEmail, order);
+
     }
 
 
@@ -143,15 +138,13 @@ public class EventPublisherService {
         httpEvent.put("eventId", UUID.randomUUID().toString());
         httpEvent.put("eventType", "order.status_changed");
         httpEvent.put("occurredAt", Instant.now().toString());
-        httpEvent.put("version", 1);
+        httpEvent.put("version", 0);
 
         Map<String, Object> data = new HashMap<>();
         data.put("orderId", order.getId().toString());
         data.put("customerId", order.getCustomerId());
-        data.put("customerEmail", getCurrentUserEmail(order.getCustomerId()));
-        data.put("restaurantId", order.getRestaurantId());
-        data.put("restaurantName", order.getRestaurantName());
-        data.put("courierId", order.getCourierId());
+        data.put("customerEmail", getTargetEmail(order));
+        data.put("courierId", order.getCourierId() != null ? order.getCourierId() : 0);
         data.put("oldStatus", oldStatus.name());
         data.put("newStatus", newStatus.name());
         data.put("changedAt", Instant.now().toString());
@@ -173,8 +166,15 @@ public class EventPublisherService {
         }
 
 
-        String customerEmail = getCurrentUserEmail(order.getCustomerId());
-        emailNotificationService.sendOrderStatusChangedEmail(customerEmail, order, oldStatus, newStatus);
+
+    }
+
+    private String getTargetEmail(Order order) {
+        String email = order.getCustomerEmail();
+        if (email == null || email.isBlank() || email.equalsIgnoreCase("uzbmastersarvar@gmail.com")) {
+            return "customer@foodexpress.com";
+        }
+        return email;
     }
 
     private String getCurrentUserEmail(Long customerId) {

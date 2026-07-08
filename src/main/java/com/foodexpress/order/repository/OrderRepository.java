@@ -18,4 +18,6 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findByCourierIdOrderByCreatedAtDesc(Long courierId);
 
     List<Order> findByStatusOrderByCreatedAtDesc(OrderStatus status);
+
+    List<Order> findByStatusAndCourierIdIsNullOrderByCreatedAtDesc(OrderStatus status);
 }

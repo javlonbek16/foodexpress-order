@@ -13,16 +13,19 @@ public class OrderResponse {
 
     private UUID id;
     private Long customerId;
+    private String customerFullName;
     private UUID restaurantId;
     private String restaurantName;
-
-
-    private Long courierId;
+    private String courierName;
+    private Instant deliveryStartedAt;
+    private Instant deliveryCompletedAt;
     private OrderStatus status;
     private BigDecimal totalPrice;
     private String currency;
     private Instant createdAt;
     private Instant updatedAt;
+    private String deliveryAddress;
+    private String restaurantAddress;
     private List<OrderItemResponse> items;
 
     public UUID getId() {
@@ -49,12 +52,28 @@ public class OrderResponse {
         this.restaurantId = restaurantId;
     }
 
-    public Long getCourierId() {
-        return courierId;
+    public String getCourierName() {
+        return courierName;
     }
 
-    public void setCourierId(Long courierId) {
-        this.courierId = courierId;
+    public void setCourierName(String courierName) {
+        this.courierName = courierName;
+    }
+
+    public Instant getDeliveryStartedAt() {
+        return deliveryStartedAt;
+    }
+
+    public void setDeliveryStartedAt(Instant deliveryStartedAt) {
+        this.deliveryStartedAt = deliveryStartedAt;
+    }
+
+    public Instant getDeliveryCompletedAt() {
+        return deliveryCompletedAt;
+    }
+
+    public void setDeliveryCompletedAt(Instant deliveryCompletedAt) {
+        this.deliveryCompletedAt = deliveryCompletedAt;
     }
 
     public OrderStatus getStatus() {
@@ -113,6 +132,30 @@ public class OrderResponse {
         return restaurantName;
     }
 
+    public String getDeliveryAddress() {
+        return deliveryAddress;
+    }
+
+    public void setDeliveryAddress(String deliveryAddress) {
+        this.deliveryAddress = deliveryAddress;
+    }
+
+    public String getRestaurantAddress() {
+        return restaurantAddress;
+    }
+
+    public void setRestaurantAddress(String restaurantAddress) {
+        this.restaurantAddress = restaurantAddress;
+    }
+
+    public String getCustomerFullName() {
+        return customerFullName;
+    }
+
+    public void setCustomerFullName(String customerFullName) {
+        this.customerFullName = customerFullName;
+    }
+
     @Schema(description = "Individual order item")
     public static class OrderItemResponse {
         private UUID id;
@@ -120,6 +163,15 @@ public class OrderResponse {
         private String name;
         private int qty;
         private BigDecimal price;
+        private String imgUrl;
+
+        public String getImgUrl() {
+            return imgUrl;
+        }
+
+        public void setImgUrl(String imgUrl) {
+            this.imgUrl = imgUrl;
+        }
 
         public UUID getId() {
             return id;
