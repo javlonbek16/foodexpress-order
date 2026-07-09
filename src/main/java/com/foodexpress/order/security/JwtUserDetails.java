@@ -8,6 +8,8 @@ import java.util.UUID;
 
 public class JwtUserDetails {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(JwtUserDetails.class);
+
     private final Long userId;
     private final String role;
     private final UUID restaurantId;
@@ -17,6 +19,7 @@ public class JwtUserDetails {
     private final String name;
 
     public JwtUserDetails(Claims claims, JwtUtil jwtUtil) {
+        log.info("Parsed JWT Claims: {}", claims);
         this.userId = jwtUtil.getUserId(claims);
         this.role = jwtUtil.getRole(claims);
         this.restaurantId = jwtUtil.getRestaurantId(claims);

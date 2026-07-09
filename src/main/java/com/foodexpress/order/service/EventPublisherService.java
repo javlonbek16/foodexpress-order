@@ -65,27 +65,7 @@ public class EventPublisherService {
         httpEvent.put("eventType", "order.created");
         httpEvent.put("occurredAt", Instant.now().toString());
         httpEvent.put("version", 0);
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("orderId", order.getId().toString());
-        data.put("customerId", order.getCustomerId());
-        data.put("customerEmail", getTargetEmail(order));
-        data.put("restaurantId", order.getRestaurantId());
-        data.put("totalPrice", order.getTotalPrice());
-        data.put("currency", order.getCurrency() != null ? order.getCurrency() : "UZS");
-        data.put("status", order.getStatus().name());
-        data.put("createdAt", order.getCreatedAt().toString());
-
-        data.put("items", order.getItems().stream().map(item -> {
-            Map<String, Object> itemMap = new HashMap<>();
-            itemMap.put("menuItemId", item.getMenuItemId().toString());
-            itemMap.put("name", item.getName());
-            itemMap.put("qty", item.getQty());
-            itemMap.put("price", item.getPrice().doubleValue());
-            return itemMap;
-        }).collect(Collectors.toList()));
-
-        httpEvent.put("data", data);
+        httpEvent.put("data", buildHttpOrderData(order));
 
 
         try {
@@ -148,6 +128,8 @@ public class EventPublisherService {
         data.put("oldStatus", oldStatus.name());
         data.put("newStatus", newStatus.name());
         data.put("changedAt", Instant.now().toString());
+        data.put("totalPrice", order.getTotalPrice());
+        data.put("currency", order.getCurrency() != null ? order.getCurrency() : "UZS");
 
         httpEvent.put("data", data);
 
@@ -169,9 +151,32 @@ public class EventPublisherService {
 
     }
 
+    private Map<String, Object> buildHttpOrderData(Order order) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("orderId", order.getId().toString());
+        data.put("customerId", order.getCustomerId());
+        data.put("customerEmail", getTargetEmail(order));
+        data.put("restaurantId", order.getRestaurantId() != null ? order.getRestaurantId().toString() : "");
+        data.put("totalPrice", order.getTotalPrice());
+        data.put("currency", order.getCurrency() != null ? order.getCurrency() : "UZS");
+        data.put("status", order.getStatus().name());
+        data.put("createdAt", order.getCreatedAt() != null ? order.getCreatedAt().toString() : Instant.now().toString());
+
+        data.put("items", order.getItems().stream().map(item -> {
+            Map<String, Object> itemMap = new HashMap<>();
+            itemMap.put("menuItemId", item.getMenuItemId() != null ? item.getMenuItemId().toString() : "");
+            itemMap.put("name", item.getName());
+            itemMap.put("qty", item.getQty());
+            itemMap.put("price", item.getPrice() != null ? item.getPrice().doubleValue() : 0.0);
+            return itemMap;
+        }).collect(Collectors.toList()));
+
+        return data;
+    }
+
     private String getTargetEmail(Order order) {
         String email = order.getCustomerEmail();
-        if (email == null || email.isBlank() || email.equalsIgnoreCase("uzbmastersarvar@gmail.com")) {
+        if (email == null || email.isBlank()) {
             return "customer@foodexpress.com";
         }
         return email;
