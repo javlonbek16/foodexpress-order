@@ -57,3 +57,6 @@ Buyurtma hayotiy siklining markazi: savatcha, buyurtma yaratish, **holat o'tishl
 
 ## 7. O'rganish maqsadi
 Status machine, event-driven arxitektura (publisher), servislararo REST chaqiruv, JWT lokal tekshiruv, ma'lumot egaligi (ownership) bo'yicha filtrlash.
+
+## 8. Ready Swagger for testing
+https://order.foodex.uz/orderdoc
